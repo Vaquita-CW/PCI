@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo PCI</title>
+  </head>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .bouton1 {
+      position: fixed;
+      left: 1vw;
+      top: 1vh;
+      width: 10vw;
+      height: 10vh;
+      z-index: 1;
+      background-color: whitesmoke;
+      border: solid 0.1rem black;
+      border-radius: 1rem;
+    }
+
+    .bouton1:hover {
+      cursor: pointer;
+    }
+
+    .bouton2 {
+      position: fixed;
+      right: 1vw;
+      bottom: 1vh;
+      width: 10vw;
+      height: 10vh;
+      z-index: 1;
+      background-color: whitesmoke;
+      border: solid 0.1rem black;
+      border-radius: 1rem;
+    }
+
+    .bouton2:hover {
+      cursor: pointer;
+    }
+
+    .bouton3 {
+      position: fixed;
+      left: 1vw;
+      bottom: 1vh;
+      width: 10vw;
+      height: 10vh;
+      z-index: 1;
+      background-color: whitesmoke;
+      border: solid 0.1rem black;
+      border-radius: 1rem;
+    }
+
+    .bouton3:hover {
+      cursor: pointer;
+    }
+
+  </style>
+
+  <body>
+
+    <script type="module">
+      import * as THREE from "./three.module.js";
+      import { OrbitControls } from "./OrbitControls.js";
+
+      let scene = new THREE.Scene();
+      let camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+      
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+
+      const robotgeometry = new THREE.BoxGeometry( 0.2, 0.3, 0.2 );
+      let robotmaterial = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
+      let robot = new THREE.Mesh( robotgeometry, robotmaterial );
+      robot.position.set(0, 0.3/2 + 0.02, 0);
+      scene.add( robot );
+
+      const tablegeometry = new THREE.PlaneGeometry( 3, 2 );
+      let tablematerial = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
+      let table = new THREE.Mesh( tablegeometry, tablematerial );
+      table.rotation.set(Math.PI/2, 0, 0);
+      table.position.set(0, 0.01, 0);
+      scene.add( table );
+
+      let gridHelper = new THREE.GridHelper( 10, 100 );
+      scene.add( gridHelper );
+
+      let controls = new OrbitControls( camera, renderer.domElement );
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 1.0;
+      controls.enableDamping = true;
+
+      camera.position.set( 0, 2, 3 );
+      controls.update();
+
+      scene.background = new THREE.Color( 0xffffff );
+
+      function robotrandom() {
+        robot.position.set(
+          Math.random()*3 - 3/2,
+          0.3/2 + 0.02,
+          Math.random()*2 - 1
+        );
+      }
+
+      var sw1 = false;
+
+      function switchtheme() {
+        if (sw1){
+          scene.background = new THREE.Color( 0xffffff );
+          robotmaterial.wireframe = false;
+          robotmaterial.color = new THREE.Color( 0x0000ff );
+          gridHelper = new THREE.GridHelper( 10, 100 );
+          scene.add(gridHelper);
+        } else {
+          scene.background = new THREE.Color( 0x000000 );
+          robotmaterial.wireframe = true;
+          robotmaterial.color = new THREE.Color( 0x00ff00 );
+          gridHelper = new THREE.GridHelper( 10, 100, new THREE.Color( 0x00ff00 ), new THREE.Color( 0x00ff00 ));
+          scene.add(gridHelper);
+        }
+        sw1 = !sw1;
+      }
+
+      var sw2 = false;
+
+      function robotmove() {
+        sw2 = !sw2;
+        if (!sw2){
+          robot.position.set(0, 0.3/2 + 0.02, 0);
+        }
+      }
+
+      let body = document.body;
+
+      let bouton1 = document.createElement("div");
+      bouton1.setAttribute("class","bouton1");
+      bouton1.onclick = robotrandom;
+      body.appendChild(bouton1);
+
+      let bouton2 = document.createElement("div");
+      bouton2.setAttribute("class","bouton2");
+      bouton2.onclick = switchtheme;
+      body.appendChild(bouton2);
+
+      let bouton3 = document.createElement("div");
+      bouton3.setAttribute("class","bouton3");
+      bouton3.onclick = robotmove;
+      body.appendChild(bouton3);
+
+      
+      let raycaster = new THREE.Raycaster();
+      let pointer = new THREE.Vector2();
+
+      function onPointerMove( event ) {
+        pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+      }
+
+      window.addEventListener( 'pointermove', onPointerMove );
+
+      function animate() {
+        raycaster.setFromCamera( pointer, camera );
+        let intersect = raycaster.intersectObject(table, false);
+        if (sw2){
+          robot.position.set(Object(Object(intersect[0]).point).x, 0.3/2 + 0.02, Object(Object(intersect[0]).point).z);
+        }
+
+        requestAnimationFrame( animate );
+        controls.update();
+        renderer.render( scene, camera );
+      }
+      animate();
+
+    </script>
+  </body>
+</html>
